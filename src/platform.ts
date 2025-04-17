@@ -70,11 +70,7 @@ type C4HCSetRequestPayload = C4HCCommonPayload & {
 };
 
 type C4HCGetRequestPayload = C4HCCommonPayload & {
-  name: string;
-  service: string;
-  characteristic: string;
-  identifier?: CharacteristicValue;
-  serviceLabelIndex?: CharacteristicValue;
+  simple?: boolean;
 };
 
 /**
@@ -154,16 +150,12 @@ type C4HCOutgoingMessage =
   | {
       topic: 'get-response';
       payload: C4HCResponsePayload<{
-        [uuid: string]: C4HCAccessoryDefinition;
+        [uuid: string]: C4HCAccessoryDefinition | string;
       }>;
     }
   | {
       topic: 'set-response';
       payload: C4HCResponsePayload<C4HCSetRequestPayload>;
-    }
-  | {
-      topic: 'get-request';
-      payload: C4HCGetRequestPayload;
     }
   | {
       topic: 'set-request';
@@ -407,16 +399,6 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
     service: Service,
     characteristic: Characteristic,
   ): CharacteristicValue {
-    // Trigger an update for the characteristic
-    // this.send({
-    //   topic: 'get-request',
-    //   payload: {
-    //     uuid: accessory.UUID,
-    //     name: accessory.displayName,
-    //     service: service.constructor.name,
-    //     characteristic: characteristic.constructor.name,
-    //   },
-    // });
     let cachedValue = this.characteristicValueCache.get(
       cacheKey(accessory, service, characteristic),
     );
@@ -855,11 +837,15 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
 
   getAccessories(
     payload: C4HCGetRequestPayload,
-  ): C4HCResponsePayload<{ [key: string]: C4HCAccessoryDefinition }> {
+  ): C4HCResponsePayload<{ [key: string]: C4HCAccessoryDefinition | string }> {
     const accessories = {};
     for (const accessory of this.accessories.values()) {
       if (payload.uuid === 'all' || payload.uuid === accessory.UUID) {
-        accessories[accessory.UUID] = accessory.context.definition;
+        if (payload.simple) {
+          accessories[accessory.UUID] = accessory.context.definition.name;
+        } else {
+          accessories[accessory.UUID] = accessory.context.definition;
+        }
       }
     }
     return {
