@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
-    "lib": ["es2020"],
+    "target": "ES2024",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2024"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -10,7 +11,8 @@
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "skipLibCheck": true
   },
   "include": ["src/"],
   "exclude": ["**/*.spec.ts"]
