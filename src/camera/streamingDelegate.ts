@@ -23,11 +23,11 @@ import {
 import { spawn } from 'child_process';
 import { createSocket, Socket } from 'dgram';
 import ffmpegPath from 'ffmpeg-for-homebridge';
-import { FfmpegProcess } from './ffmpeg';
-import { C4HCHomebridgePlatform, C4HCPlatformAccessoryContext } from '../platform';
-import { RtpDescription, RtpOptions, SipCall } from './sip-call';
-import { RtpHelper, RtpPortAllocator } from './rtp';
-import { loggerWithPrefix } from '../utils';
+import { FfmpegProcess } from './ffmpeg.js';
+import { C4HCHomebridgePlatform, C4HCPlatformAccessoryContext } from '../platform.js';
+import { RtpDescription, RtpOptions, SipCall } from './sip-call.js';
+import { RtpHelper, RtpPortAllocator } from './rtp.js';
+import { loggerWithPrefix } from '../utils.js';
 
 export type CameraConfig = {
   source?: string;
@@ -354,6 +354,13 @@ export class StreamingDelegate implements CameraStreamingDelegate {
     request: PrepareStreamRequest,
     callback: PrepareStreamCallback,
   ): Promise<void> {
+    if (this.cameraConfig.sipConfig && this.sipCall) {
+      this.platform.send({
+        topic: 'clear-intercom-sessions-request',
+        payload: { uuid: this.accessory.UUID },
+      });
+    }
+
     const ipv6 = request.addressVersion === 'ipv6';
     const [videoReturnPort, _, audioReturnPort, __, ...sipAudioPorts] =
       await RtpPortAllocator.reservePorts(
