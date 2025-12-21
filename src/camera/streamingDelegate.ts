@@ -354,6 +354,13 @@ export class StreamingDelegate implements CameraStreamingDelegate {
     request: PrepareStreamRequest,
     callback: PrepareStreamCallback,
   ): Promise<void> {
+    if (this.cameraConfig.sipConfig && this.sipCall) {
+      this.platform.send({
+        topic: 'clear-intercom-sessions-request',
+        payload: { uuid: this.accessory.UUID },
+      });
+    }
+
     const ipv6 = request.addressVersion === 'ipv6';
     const [videoReturnPort, _, audioReturnPort, __, ...sipAudioPorts] =
       await RtpPortAllocator.reservePorts(

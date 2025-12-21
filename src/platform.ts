@@ -164,6 +164,10 @@ type C4HCOutgoingMessage =
   | {
       topic: 'camera-support-response';
       payload: C4HCResponsePayload<C4HCCameraSupportResponse>;
+    }
+  | {
+      topic: 'clear-intercom-sessions-request';
+      payload: C4HCCommonPayload;
     };
 
 const CAMERA_SERVICE_NAMES = [
