@@ -27,7 +27,7 @@ export class FfmpegCodecs {
       const decodersRegex = /\S+\s+(?<codec>\S+).+\(decoders:(?<decoders>[^)]+)\)/;
       const encodersRegex = /\S+\s+(?<codec>\S+).+\(encoders:(?<encoders>[^)]+)\)/;
       this._ffmpegCodecs = {};
-      1;
+
       for (const codecLine of stdout.toLowerCase().split(os.EOL)) {
         const encodersMatch = encodersRegex.exec(codecLine)?.groups;
         const decodersMatch = decodersRegex.exec(codecLine)?.groups;

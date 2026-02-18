@@ -528,9 +528,9 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
             accessory.removeService(service);
           });
         // Valid definition -> register or update the accessory
-        ack = true;
         this.accessories.set(accessory.UUID, accessory);
         if (existingAccessory) {
+          ack = true;
           message = `updated ${payload.external ? 'external ' : ''}accessory '${name}'`;
           if (!payload.external) {
             this.api.updatePlatformAccessories([accessory]);
@@ -538,15 +538,24 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
             // TODO: Is there a way to update external accessories?
           }
         } else {
-          message = `added ${payload.external ? 'external ' : ''}accessory '${name}'`;
           this.log.info(
             `${payload.external ? 'Exposing external' : 'Adding new'} accessory:`,
             name,
           );
-          if (!payload.external) {
-            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-          } else {
-            this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
+          try {
+            if (!payload.external) {
+              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            } else {
+              this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
+            }
+            ack = true;
+            message = `added ${payload.external ? 'external ' : ''}accessory '${name}'`;
+          } catch (e: unknown) {
+            const error = e as Error;
+            this.log.error('Failed to register accessory %s: %s', name, error.message);
+            this.accessories.delete(accessory.UUID);
+            ack = false;
+            message = `failed to add accessory '${name}': ${error.message}`;
           }
         }
       }
