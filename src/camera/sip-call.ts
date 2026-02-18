@@ -1,8 +1,11 @@
 import { Logger } from 'homebridge';
+import { createRequire } from 'module';
 import sip from 'sip';
-import sipDigest from 'sip/digest';
 import sdp from 'sdp';
 import { URL } from 'url';
+
+const require = createRequire(import.meta.url);
+const sipDigest = require('sip/digest');
 
 interface RtpStreamOptions {
   port: number;

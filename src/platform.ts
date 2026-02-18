@@ -15,14 +15,14 @@ import {
   UnknownContext,
 } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { WebSocket, WebSocketServer } from 'ws';
 import basicAuth from 'basic-auth';
 import createCert from 'create-cert';
 import http from 'http';
 import https from 'https';
-import { CameraConfig, StreamingDelegate } from './camera/streamingDelegate';
-import { FfmpegCodecs } from './camera/ffmpeg-codecs';
+import { CameraConfig, StreamingDelegate } from './camera/streamingDelegate.js';
+import { FfmpegCodecs } from './camera/ffmpeg-codecs.js';
 
 export type C4HCHomebridgePlatformConfig = PlatformConfig & {
   port: number;
@@ -238,7 +238,7 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
           ) {
             return true;
           }
-        } catch (e) {
+        } catch {
           /* capture any failures parsing auth header and fall through */
         }
         this.log.error('Authentication failed; refusing connection');
@@ -255,7 +255,7 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
         let message;
         try {
           message = JSON.parse(data.toString());
-        } catch (e) {
+        } catch {
           // Invalid message is handled below
         }
         if (!message?.topic || !message?.payload) {
@@ -279,7 +279,7 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
   async getCert(): Promise<createCert.CertificateData> {
     try {
       return await createCert();
-    } catch (e) {
+    } catch {
       this.log.warn(
         'Failed to generate custom SSL cert; falling back to insecure default certificate',
       );
@@ -528,9 +528,9 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
             accessory.removeService(service);
           });
         // Valid definition -> register or update the accessory
-        ack = true;
         this.accessories.set(accessory.UUID, accessory);
         if (existingAccessory) {
+          ack = true;
           message = `updated ${payload.external ? 'external ' : ''}accessory '${name}'`;
           if (!payload.external) {
             this.api.updatePlatformAccessories([accessory]);
@@ -538,15 +538,24 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
             // TODO: Is there a way to update external accessories?
           }
         } else {
-          message = `added ${payload.external ? 'external ' : ''}accessory '${name}'`;
           this.log.info(
             `${payload.external ? 'Exposing external' : 'Adding new'} accessory:`,
             name,
           );
-          if (!payload.external) {
-            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-          } else {
-            this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
+          try {
+            if (!payload.external) {
+              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            } else {
+              this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
+            }
+            ack = true;
+            message = `added ${payload.external ? 'external ' : ''}accessory '${name}'`;
+          } catch (e: unknown) {
+            const error = e as Error;
+            this.log.error('Failed to register accessory %s: %s', name, error.message);
+            this.accessories.delete(accessory.UUID);
+            ack = false;
+            message = `failed to add accessory '${name}': ${error.message}`;
           }
         }
       }
@@ -797,7 +806,7 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
       this.adaptiveLightingControllers.set(service.getServiceId(), controller);
       try {
         accessory.configureController(controller);
-      } catch (e) {
+      } catch {
         // Already configured
       }
     } else if (serviceName === 'Lightbulb') {

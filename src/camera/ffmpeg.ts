@@ -3,7 +3,7 @@ import { Logger, StreamRequestCallback } from 'homebridge';
 import os from 'os';
 import readline from 'readline';
 import { Writable } from 'stream';
-import { StreamingDelegate } from './streamingDelegate';
+import { StreamingDelegate } from './streamingDelegate.js';
 
 type FfmpegProgress = {
   frame: number;

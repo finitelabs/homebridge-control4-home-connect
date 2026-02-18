@@ -15,6 +15,7 @@
     "node": ">=18",
     "homebridge": ">=1.8.0 || ^2.0.0-beta.0"
   },
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "eslint": "eslint src/**.ts --max-warnings=0",
@@ -36,24 +37,24 @@
   "dependencies": {
     "basic-auth": "^2.0.1",
     "create-cert": "^1.0.6",
-    "ffmpeg-for-homebridge": "^2.1.7",
-    "sdp": "3.2.0",
-    "sip": "0.0.6",
-    "ws": "^8.18.0"
+    "ffmpeg-for-homebridge": "^2.2.1",
+    "sdp": "^3.2.1",
+    "sip": "^0.0.6",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/basic-auth": "^1.1.8",
     "@types/create-cert": "^1.0.4",
-    "@types/node": "^22.8.0",
-    "@types/ws": "^8.5.12",
-    "@typescript-eslint/eslint-plugin": "6.10.0",
-    "@typescript-eslint/parser": "6.10.0",
-    "eslint": "8.57.0",
-    "homebridge": "^2.0.0-beta.22",
-    "homebridge-config-ui-x": "^4.62.0",
-    "nodemon": "^3.1.7",
-    "prettier": "^3.3.3",
+    "@types/node": "^25.2.3",
+    "@types/ws": "^8.18.1",
+    "eslint": "^10.0.0",
+    "homebridge": "^2.0.0-beta.69",
+    "homebridge-config-ui-x": "^5.17.0",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.0"
   }
 }
