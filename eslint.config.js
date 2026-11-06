@@ -29,6 +29,7 @@ export default tseslint.config(
       'comma-spacing': 'error',
       'no-multi-spaces': ['warn', { ignoreEOLComments: true }],
       'no-trailing-spaces': 'warn',
+      'lines-between-class-members': ['warn', 'always', { exceptAfterSingleLine: true }],
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['error', {
         varsIgnorePattern: '^_+$|^unused\\w+$',
