@@ -119,7 +119,6 @@ export class StreamingDelegate implements CameraStreamingDelegate {
     platform: C4HCHomebridgePlatform,
     accessory: PlatformAccessory<C4HCPlatformAccessoryContext>,
   ) {
-    // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
     this.log = loggerWithPrefix(log, `[${accessory.displayName}]`);
     this.api = api;
     this.platform = platform;
@@ -355,11 +354,18 @@ export class StreamingDelegate implements CameraStreamingDelegate {
     callback: PrepareStreamCallback,
   ): Promise<void> {
     const ipv6 = request.addressVersion === 'ipv6';
-    const [videoReturnPort, _, audioReturnPort, __, ...sipAudioPorts] =
-      await RtpPortAllocator.reservePorts(
+    let ports: number[];
+    try {
+      ports = await RtpPortAllocator.reservePorts(
         ipv6 ? 'ipv6' : 'ipv4',
         this.cameraConfig.sipConfig && this.sipCall ? 8 : 4,
       );
+    } catch (err) {
+      this.log.error('Error reserving stream ports:', err);
+      callback(err as Error);
+      return;
+    }
+    const [videoReturnPort, _, audioReturnPort, __, ...sipAudioPorts] = ports;
     const videoSSRC = this.api.hap.CameraController.generateSynchronisationSource();
     const audioSSRC = this.api.hap.CameraController.generateSynchronisationSource();
 
