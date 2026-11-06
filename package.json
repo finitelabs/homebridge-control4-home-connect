@@ -46,7 +46,7 @@
     "@eslint/js": "^10.0.1",
     "@types/basic-auth": "^1.1.8",
     "@types/create-cert": "^1.0.4",
-    "@types/node": "^25.2.3",
+    "@types/node": "^18.19.130",
     "@types/ws": "^8.18.1",
     "eslint": "^10.0.0",
     "homebridge": "^2.0.0-beta.69",
