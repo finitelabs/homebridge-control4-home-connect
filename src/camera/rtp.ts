@@ -133,7 +133,6 @@ export class RtpPortAllocator {
         socket.bind(port);
 
         // Ensure we wait for the socket to be bound.
-        // eslint-disable-next-line no-await-in-loop
         await eventListener;
 
         // Retrieve the port number we've gotten from the bind request.
@@ -145,7 +144,7 @@ export class RtpPortAllocator {
         // Return the port.
         return assignedPort;
       }
-    } catch (error) {
+    } catch {
       return -1;
     }
   }
@@ -169,7 +168,6 @@ export class RtpPortAllocator {
 
     // Find the appropriate number of ports being requested.
     while (ports.length !== portCount) {
-      // eslint-disable-next-line no-await-in-loop
       const assignedPort = await this.getPort(
         ipFamily,
         ports.length > 0 ? ports[ports.length - 1] + 1 : 0,
@@ -180,7 +178,7 @@ export class RtpPortAllocator {
       // after the rtp port as per the spec.
       if (assignedPort === -1 || (ports.length === 0 && assignedPort % 2 === 1)) {
         // We still haven't found what we're looking for...keep looking.
-        return this.reservePorts(ipFamily, portCount, attempts++);
+        return this.reservePorts(ipFamily, portCount, attempts + 1);
       }
       ports.push(assignedPort);
     }
