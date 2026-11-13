@@ -986,7 +986,7 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   send(message: C4HCOutgoingMessage) {
-    if (this.wsConnection && this.wsConnection.OPEN) {
+    if (this.wsConnection && this.wsConnection.readyState === WebSocket.OPEN) {
       const data = JSON.stringify(message);
       this.log.debug('send: %s', data);
       this.wsConnection.send(data, (error) => {
