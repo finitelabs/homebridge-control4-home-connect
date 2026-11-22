@@ -20,15 +20,11 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: npm install -g npm@latest
 
-      - name: Check the tag matches package.json
-        run: |
-          version="v$(node -p "require('./package.json').version")"
-          if [ "$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json's $version. Push the tag npm version made."
-            exit 1
-          fi
-
       - run: npm ci
+
+      # The tag is the version, so a release needs no version commit. npm rejects a tag that isn't semver.
+      - name: Set the version from the tag
+        run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
 
       # A suffixed tag (v2.1.4-beta.1) publishes to @beta and as a pre-release.
       - name: Publish

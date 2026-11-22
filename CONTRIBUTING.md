@@ -79,38 +79,30 @@ Given a version number `MAJOR`.`MINOR`.`PATCH`, such as `1.4.3`, increment the:
 2. **MINOR** version when you add functionality in a backwards compatible manner, and
 3. **PATCH** version when you make backwards compatible bug fixes.
 
-You can use the `npm version` command to help you with this:
+## Releasing
+
+A release is a tag. Pushing a `v*` tag runs [`publish.yml`](./.github/workflows/publish.yml),
+which sets the package's version from the tag, publishes it to npm and creates the GitHub release.
+Nothing is committed for a release, so the version in `package.json` on `master` isn't kept current.
 
 ```bash
-# major update / breaking changes
-npm version major
-
-# minor update / new features
-npm version minor
-
-# patch / bugfixes
-npm version patch
+git switch master
+git pull
+git tag v2.1.4
+git push origin v2.1.4
 ```
 
-`npm version` commits the new version and tags it. Pushing both publishes the release: the tag runs
-[`publish.yml`](./.github/workflows/publish.yml), which publishes to npm and creates the GitHub
-release with generated notes. Pushing to `master` takes an org admin, since the branch ruleset asks
-everyone else for a pull request.
-
-```bash
-git push --follow-tags
-```
+The release notes list the pull requests merged since the previous tag. Label a pull request
+`skip-release-notes` to leave it out.
 
 #### Publishing Beta Versions
 
 You can publish _beta_ versions of this plugin for other users to test before you release it to everyone.
+A tag with a suffix publishes to `@beta` and as a pre-release:
 
 ```bash
-# create a new pre-release version (eg. 2.1.0-beta.1)
-npm version prepatch --preid beta
-
-# publish to @beta and as a pre-release
-git push --follow-tags
+git tag v2.1.4-beta.1
+git push origin v2.1.4-beta.1
 ```
 
 Users can then install the _beta_ version by appending `@beta` to the install command, for example:
