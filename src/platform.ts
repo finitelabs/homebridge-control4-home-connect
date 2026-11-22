@@ -247,7 +247,7 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
     });
     wss.on('connection', (ws, req) => {
       this.wsConnection = ws;
-      this.wsConnection.on('message', async (data) => {
+      ws.on('message', async (data) => {
         if (!data) {
           return;
         }
@@ -264,11 +264,16 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
         }
         this.send(await this.onMessage(<C4HCIncomingMessage>message));
       });
-      this.wsConnection.on('close', () => {
+      ws.on('close', () => {
         this.log.info('client ip %s disconnected', req.socket.remoteAddress);
-        this.characteristicValueCache.clear();
+        // A replaced connection can close long after its replacement sent every value; only
+        // the current connection's values go with it.
+        if (this.wsConnection === ws) {
+          this.wsConnection = null;
+          this.characteristicValueCache.clear();
+        }
       });
-      this.wsConnection.on('error', (e) => {
+      ws.on('error', (e) => {
         this.log.error('websocket error: %s', e.message);
       });
       this.log.info('client ip %s connected', req.socket.remoteAddress);
