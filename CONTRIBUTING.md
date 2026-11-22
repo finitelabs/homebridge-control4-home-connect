@@ -81,7 +81,7 @@ Given a version number `MAJOR`.`MINOR`.`PATCH`, such as `1.4.3`, increment the:
 
 ## Releasing
 
-A release is a tag. Pushing a `v*` tag runs [`publish.yml`](./.github/workflows/publish.yml),
+A release is a tag. Pushing a `v*` tag runs [`release.yml`](./.github/workflows/release.yml),
 which sets the package's version from the tag, publishes it to npm and creates the GitHub release.
 Nothing is committed for a release, so the version in `package.json` on `master` isn't kept current.
 

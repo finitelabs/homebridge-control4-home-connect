@@ -1,6 +1,6 @@
-name: Publish Package to npmjs
+name: Release
 
-# npm trusted publishing is tied to this file's name, so it stays publish.yml.
+# The package's trusted publisher on npm names this file, so renaming it means changing that too.
 on:
   push:
     tags: ['v*']
