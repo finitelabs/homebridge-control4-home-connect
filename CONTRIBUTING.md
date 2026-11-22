@@ -92,6 +92,15 @@ npm version minor
 npm version patch
 ```
 
+`npm version` commits the new version and tags it. Pushing both publishes the release: the tag runs
+[`publish.yml`](./.github/workflows/publish.yml), which publishes to npm and creates the GitHub
+release with generated notes. Pushing to `master` takes an org admin, since the branch ruleset asks
+everyone else for a pull request.
+
+```bash
+git push --follow-tags
+```
+
 #### Publishing Beta Versions
 
 You can publish _beta_ versions of this plugin for other users to test before you release it to everyone.
@@ -100,8 +109,8 @@ You can publish _beta_ versions of this plugin for other users to test before yo
 # create a new pre-release version (eg. 2.1.0-beta.1)
 npm version prepatch --preid beta
 
-# publish to @beta
-npm publish --tag=beta
+# publish to @beta and as a pre-release
+git push --follow-tags
 ```
 
 Users can then install the _beta_ version by appending `@beta` to the install command, for example:

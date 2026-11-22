@@ -1,14 +1,17 @@
 name: Publish Package to npmjs
+
+# npm trusted publishing is tied to this file's name, so it stays publish.yml.
 on:
-  release:
-    types: [created]
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-26.04
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,5 +19,25 @@ jobs:
           node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
       - run: npm install -g npm@latest
+
+      - name: Check the tag matches package.json
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json's $version. Push the tag npm version made."
+            exit 1
+          fi
+
       - run: npm ci
-      - run: npm publish --provenance --access public
+
+      # A suffixed tag (v2.1.4-beta.1) publishes to @beta and as a pre-release.
+      - name: Publish
+        run: npm publish --provenance --access public --tag "$NPM_TAG"
+        env:
+          NPM_TAG: ${{ contains(github.ref_name, '-') && 'beta' || 'latest' }}
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
