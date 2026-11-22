@@ -1,0 +1,46 @@
+name: Release
+
+# The package's trusted publisher on npm names this file, so renaming it means changing that too.
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-26.04
+    # Dependencies' install scripts run in this job, so its token stays read-only.
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+
+      # npm rejects a tag that isn't semver.
+      - name: Set the version from the tag
+        run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+
+      - name: Publish
+        run: npm publish --provenance --access public --tag "$NPM_TAG"
+        env:
+          NPM_TAG: ${{ contains(github.ref_name, '-') && 'beta' || 'latest' }}
+
+  # A job of its own, so a failed release can be rerun without publishing again.
+  release:
+    needs: publish
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
