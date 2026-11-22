@@ -211,13 +211,29 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
     this.config = <C4HCHomebridgePlatformConfig>this.platformConfig;
     this.ffmpegCodecs = new FfmpegCodecs(this.log);
     this.api.on(APIEvent.DID_FINISH_LAUNCHING, async () => this.startup());
+    // One listener for every camera, since a camera gets a new delegate each time it's re-added.
+    this.api.on(APIEvent.SHUTDOWN, () => {
+      for (const delegate of this.cameraStreamingDelegates.values()) {
+        delegate.destroy();
+      }
+    });
   }
 
   configureAccessory(accessory: PlatformAccessory<UnknownContext>) {
     const typedAccessory = accessory as PlatformAccessory<C4HCPlatformAccessoryContext>;
     this.log.info('Loading accessory from cache:', typedAccessory.displayName);
     this.accessories.set(typedAccessory.UUID, typedAccessory);
-    this.addAccessory(typedAccessory.context.definition);
+    // Homebridge doesn't catch errors here, so a bad cached definition would stop every start.
+    try {
+      this.addAccessory(typedAccessory.context.definition);
+    } catch (e: unknown) {
+      const error = e as Error;
+      this.log.error(
+        'Failed to load accessory %s from cache: %s',
+        typedAccessory.displayName,
+        error.message,
+      );
+    }
   }
 
   async startup() {
@@ -262,7 +278,23 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
           this.log.warn("received invalid message '%s'", data.toString());
           return;
         }
-        this.send(await this.onMessage(<C4HCIncomingMessage>message));
+        // Homebridge shuts down on an unhandled rejection, so a bad message must fail on its own.
+        let response: C4HCOutgoingMessage;
+        try {
+          response = await this.onMessage(<C4HCIncomingMessage>message);
+        } catch (e: unknown) {
+          const error = e as Error;
+          this.log.error("failed to handle '%s': %s", message.topic, error.message);
+          response = {
+            topic: 'response',
+            payload: <C4HCResponsePayload<never>>{
+              ack: false,
+              message: `failed to handle '${message.topic}': ${error.message}`,
+              response: message.payload,
+            },
+          };
+        }
+        this.send(response);
       });
       ws.on('close', () => {
         this.log.info('client ip %s disconnected', req.socket.remoteAddress);
@@ -436,6 +468,10 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
         return;
       }
     }
+    // send() drops the message when no driver is connected, so the write would only look done.
+    if (!this.isConnected()) {
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+    }
     // If this is a light with a brightness and is turning on, use the default brightness
     if (
       service instanceof this.Service.Lightbulb &&
@@ -506,6 +542,7 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
         let delegate = this.cameraStreamingDelegates.get(accessory.UUID);
         if (delegate) {
           accessory.removeController(delegate.controller);
+          delegate.destroy();
           this.cameraStreamingDelegates.delete(accessory.UUID);
         }
         if (accessory.context.definition.options?.camera) {
@@ -990,8 +1027,12 @@ export class C4HCHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
+  isConnected() {
+    return this.wsConnection?.readyState === WebSocket.OPEN;
+  }
+
   send(message: C4HCOutgoingMessage) {
-    if (this.wsConnection && this.wsConnection.readyState === WebSocket.OPEN) {
+    if (this.wsConnection && this.isConnected()) {
       const data = JSON.stringify(message);
       this.log.debug('send: %s', data);
       this.wsConnection.send(data, (error) => {

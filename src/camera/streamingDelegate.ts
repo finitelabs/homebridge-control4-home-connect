@@ -1,6 +1,5 @@
 import {
   API,
-  APIEvent,
   AudioStreamingCodecType,
   AudioStreamingSamplerate,
   CameraController,
@@ -125,13 +124,6 @@ export class StreamingDelegate implements CameraStreamingDelegate {
     this.accessory = accessory;
     this.ffmpegPath = (ffmpegPath as unknown as string) || 'ffmpeg';
     this.cameraConfig = this.accessory.context.definition.options?.camera ?? {};
-
-    this.api.on(APIEvent.SHUTDOWN, () => {
-      for (const session in this.ongoingSessions) {
-        this.stopStream(session);
-      }
-      this.sipCall?.destroy();
-    });
 
     const options: CameraControllerOptions = {
       cameraStreamCount: this.cameraConfig.maxStreams ?? 2,
@@ -774,5 +766,12 @@ export class StreamingDelegate implements CameraStreamingDelegate {
     }
     this.ongoingSessions.delete(sessionId);
     this.log.info('Stopped video stream');
+  }
+
+  destroy(): void {
+    for (const sessionId of this.ongoingSessions.keys()) {
+      this.stopStream(sessionId);
+    }
+    this.sipCall?.destroy();
   }
 }
