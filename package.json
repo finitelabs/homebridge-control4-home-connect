@@ -37,10 +37,10 @@
   "dependencies": {
     "basic-auth": "^2.0.1",
     "create-cert": "^1.0.6",
-    "ffmpeg-for-homebridge": "^2.2.1",
+    "ffmpeg-for-homebridge": "^2.2.2",
     "sdp": "^3.2.1",
     "sip": "^0.0.6",
-    "ws": "^8.19.0"
+    "ws": "^8.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
